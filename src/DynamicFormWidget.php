@@ -12,6 +12,7 @@ use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\base\InvalidConfigException;
 use Symfony\Component\DomCrawler\Crawler;
+use phpDocumentor\Reflection\Types\Boolean;
 
 /**
  * yii2-dynamicform is widget to yii2 framework to clone form elements in a nested manner, maintaining accessibility.
@@ -38,13 +39,29 @@ class DynamicFormWidget extends \yii\base\Widget
      */
     public $limit = 999;
     /**
+     * @var Boolean
+     */
+    public $useAjax = 0;
+    /**
+     * @var string
+     */
+    public $ajaxUrl;
+    /**
+     * @var string
+     */
+    public $data;
+    /**
      * @var string
      */
     public $insertButton;
-     /**
+    /**
      * @var string
      */
     public $deleteButton;
+    /**
+     * @var string
+     */
+    public $duplicateButton;
     /**
      * @var string 'bottom' or 'top';
      */
@@ -126,8 +143,12 @@ class DynamicFormWidget extends \yii\base\Widget
         $this->_options['widgetBody']      = $this->widgetBody;
         $this->_options['widgetItem']      = $this->widgetItem;
         $this->_options['limit']           = $this->limit;
+        $this->_options['useAjax']         = $this->useAjax;
+        $this->_options['ajaxUrl']		   = $this->ajaxUrl;
+        $this->_options['data']			   = $this->data;
         $this->_options['insertButton']    = $this->insertButton;
         $this->_options['deleteButton']    = $this->deleteButton;
+        $this->_options['duplicateButton'] = $this->duplicateButton;
         $this->_options['insertPosition']  = $this->insertPosition;
         $this->_options['formId']          = $this->formId;
         $this->_options['min']             = $this->min;
@@ -216,8 +237,15 @@ class DynamicFormWidget extends \yii\base\Widget
         $js .= "});\n";
         $view->registerJs($js, $view::POS_READY);
 
+        // add a click handler for the duplicate button
+        $js = 'jQuery("#' . $this->formId . '").on("click","' . $this->duplicateButton . '", function(e) {'. "\n";
+        $js .= " e.preventDefault();\n";
+        $js .= ' jQuery(".' . $this->widgetContainer .'").yiiDynamicForm("duplicateItem", '. $this->_hashVar . ", e, jQuery(this));\n";
+        $js .= "});\n";
+        $view->registerJs($js, $view::POS_READY);
+        
         $js = 'jQuery("#' . $this->formId . '").yiiDynamicForm(' . $this->_hashVar .');' . "\n";
-        $view->registerJs($js, $view::POS_LOAD);
+        $view->registerJs($js, $view::POS_READY);
     }
 
     /**
